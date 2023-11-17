@@ -146,7 +146,10 @@ void main() {
 function getChatGPTModelViewMatrix() {
     const transformationMatrix = new Float32Array([
         // you should paste the response of the chatGPT here:
-
+        0.25, -0.4330127, 0.6123724, 0.3,
+        0.4330127, 0.75, 0.5, -0.25,
+        -0.6123724, 0.5, 0.6123724, 0,
+        0, 0, 0, 1
     ]);
     return getTransposeMatrix(transformationMatrix);
 }
@@ -161,6 +164,20 @@ function getChatGPTModelViewMatrix() {
 function getModelViewMatrix() {
     // calculate the model view matrix by using the transformation
     // methods and return the modelView matrix in this method
+    translationMatrix = createTranslationMatrix(0.3, -0.25, 0);
+    scaleMatrix = createScaleMatrix(0.5, 0.5, 1);
+    rotationMatrix_X = createRotationMatrix_X(Math.PI/6); // 30 degrees is equal to pi/6
+    rotationMatrix_Y = createRotationMatrix_Y(Math.PI/4); // 45 degrees is equal to pi/4
+    rotationMatrix_Z = createRotationMatrix_Z(Math.PI/3); // 60 degrees is equal to pi/3
+
+    //Multiply matrices in the given order Translate(Scale(RotZ(RotY(RotX))))
+    
+    modelViewMatrix = multiplyMatrices(rotationMatrix_Y, rotationMatrix_X);
+    modelViewMatrix = multiplyMatrices(rotationMatrix_Z, modelViewMatrix);
+    modelViewMatrix = multiplyMatrices(scaleMatrix, modelViewMatrix);
+    modelViewMatrix = multiplyMatrices(translationMatrix, modelViewMatrix);
+
+    return modelViewMatrix;
 }
 
 /**
@@ -171,9 +188,39 @@ function getModelViewMatrix() {
  * position to the target position.
  * The next 5 seconds, the cube should return to its initial position.
  */
+
+
 function getPeriodicMovement(startTime) {
     // this metdo should return the model view matrix at the given time
     // to get a smooth animation
+
+    function lerpMat4(out, a, b, t) {
+        // Assuming out, a, and b are Float32Array representing 4x4 matrices
+        for (let i = 0; i < 16; i++) {
+            out[i] = a[i] + (b[i] - a[i]) * t;
+        }
+    }
+    
+    const initialMatrix = createIdentityMatrix();
+    const targetMatrix = getModelViewMatrix();
+    const currentMatrix = new Float32Array(16);
+
+    // Animation parameters
+    const animationDuration = 10 * 1000; // 10 seconds
+  
+    // Calculate elapsed time
+    const currentTime = new Date().getTime();
+    let elapsedTime = (currentTime - startTime) % animationDuration;
+
+    if (elapsedTime < animationDuration / 2) {
+        const progress = elapsedTime / (animationDuration / 2);
+        lerpMat4(currentMatrix, initialMatrix, targetMatrix, progress);
+      } else {
+        const progress = (elapsedTime - animationDuration / 2) / (animationDuration / 2);
+        lerpMat4(currentMatrix, targetMatrix, initialMatrix, progress);
+      }
+  
+    return currentMatrix;
 }
 
 
