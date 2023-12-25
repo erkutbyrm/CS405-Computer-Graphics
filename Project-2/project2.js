@@ -63,7 +63,13 @@ class MeshDrawer {
 		/**
 		 * @Task2 : You should initialize the required variables for lighting here
 		 */
-		
+
+		this.normalLoc = gl.getAttribLocation(this.prog, 'normal');
+		this.normalBuffer = gl.createBuffer();
+
+		this.enableLightingLoc = gl.getUniformLocation(this.prog, 'enableLighting');
+		this.ambientLoc = gl.getUniformLocation(this.prog, 'ambient');
+		this.lightPosLoc = gl.getUniformLocation(this.prog, 'lightPos');
 	}
 
 	setMesh(vertPos, texCoords, normalCoords) {
@@ -79,6 +85,9 @@ class MeshDrawer {
 		/**
 		 * @Task2 : You should update the rest of this function to handle the lighting
 		 */
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normalCoords), gl.STATIC_DRAW);
 	}
 
 	// This method is called to draw the triangular mesh.
@@ -103,8 +112,12 @@ class MeshDrawer {
 
 		///////////////////////////////
 
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer);
+		gl.enableVertexAttribArray(this.normalLoc);
+		gl.vertexAttribPointer(this.normalLoc, 3, gl.FLOAT, false, 0, 0);
 
 		updateLightPos();
+		gl.uniform3fv(this.lightPosLoc, normalize([lightX, lightY, 1]));
 		gl.drawArrays(gl.TRIANGLES, 0, this.numTriangles);
 
 
@@ -129,10 +142,14 @@ class MeshDrawer {
 		if (isPowerOf2(img.width) && isPowerOf2(img.height)) {
 			gl.generateMipmap(gl.TEXTURE_2D);
 		} else {
-			console.error("Task 1: Non power of 2, you should implement this part to accept non power of 2 sized textures");
 			/**
 			 * @Task1 : You should implement this part to accept non power of 2 sized textures
 			 */
+
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		}
 
 		gl.useProgram(this.prog);
@@ -148,17 +165,19 @@ class MeshDrawer {
 	}
 
 	enableLighting(show) {
-		console.error("Task 2: You should implement the lighting and implement this function ");
 		/**
 		 * @Task2 : You should implement the lighting and implement this function
 		 */
+		gl.useProgram(this.prog);
+		gl.uniform1i(this.enableLightingLoc, show);
 	}
 	
 	setAmbientLight(ambient) {
-		console.error("Task 2: You should implement the lighting and implement this function ");
 		/**
 		 * @Task2 : You should implement the lighting and implement this function
 		 */
+		gl.useProgram(this.prog);
+		gl.uniform1f(this.ambientLoc, ambient);
 	}
 }
 
@@ -219,7 +238,11 @@ const meshFS = `
 			{
 				if(showTex && enableLighting){
 					// UPDATE THIS PART TO HANDLE LIGHTING
-					gl_FragColor = texture2D(tex, v_texCoord);
+					vec3 normal = normalize(v_normal);
+					vec3 lightDirection = normalize(lightPos);
+					float diffuseLight = max(dot(normal, -lightDirection), 0.0);
+					
+					gl_FragColor = texture2D(tex, v_texCoord) * (ambient  + diffuseLight);
 				}
 				else if(showTex){
 					gl_FragColor = texture2D(tex, v_texCoord);
