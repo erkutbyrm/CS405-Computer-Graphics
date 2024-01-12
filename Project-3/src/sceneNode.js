@@ -28,14 +28,18 @@ class SceneNode {
          * @Task1 : Implement the draw function for the SceneNode class.
          */
         
-        var transformedMvp = mvp;
-        var transformedModelView = modelView;
-        var transformedNormals = normalMatrix;
-        var transformedModel = modelMatrix;
+        var transformedMvp = MatrixMult(mvp, this.trs.getTransformationMatrix());
+        var transformedModelView = MatrixMult(modelView, this.trs.getTransformationMatrix());
+        var transformedNormals = getNormalMatrix(transformedModelView);
+        var transformedModel = MatrixMult(modelMatrix, this.trs.getTransformationMatrix());
 
         // Draw the MeshDrawer
         if (this.meshDrawer) {
             this.meshDrawer.draw(transformedMvp, transformedModelView, transformedNormals, transformedModel);
+        }
+
+        for (var i = 0; i < this.children.length; i++) {
+            this.children[i].draw(transformedMvp, transformedModelView, transformedNormals, transformedModel);
         }
     }
 
