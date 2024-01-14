@@ -244,9 +244,9 @@
                 marsMeshDrawer.setMesh(sphereBuffers.positionBuffer, sphereBuffers.texCoordBuffer, sphereBuffers.normalBuffer);
                 setTextureImg(marsMeshDrawer, "https://i.imgur.com/Mwsa16j.jpeg");
                 marsTrs = new TRS();
-                marsTrs.setTranslation(-6, 0, 0);  // Translate Mars by -6 units on the X-axis
-                marsTrs.setScale(0.35, 0.35, 0.35);  // Scale Mars
-                marsNode = new SceneNode(marsMeshDrawer, marsTrs, sunNode);  // Make Mars a child of the sun
+                marsTrs.setTranslation(-6, 0, 0);
+                marsTrs.setScale(0.35, 0.35, 0.35);
+                marsNode = new SceneNode(marsMeshDrawer, marsTrs, sunNode);
 
 
                 renderLoop();
